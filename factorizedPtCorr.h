@@ -246,8 +246,7 @@ Float_t getTrkRMin(Float_t trkPhi, Float_t trkEta, Int_t nJt, Float_t jtPt[], Fl
       if(jtPt[jtEntry] < 50.0) continue;
       if(TMath::Abs(jtEta[jtEntry]) > 2.0) continue;
 
-      if(trkRMin > getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry]))
-        trkRMin = getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry]);
+      if(trkRMin > getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry], 0)) trkRMin = getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry], 0);
     }
   }
 
@@ -283,6 +282,7 @@ Float_t getFakeCorr(Int_t corrBin, Int_t hiBin, Float_t pt, Float_t phi, Float_t
 
   if(sType == kHIDATA || sType == kHIMC){
     fakeCorr = fakeCorr + (FakeVsCalocent_p[corrBin]->GetBinContent(FakeVsCalocent_p[corrBin]->FindBin(hiBin)));
+
     fakeCorr = fakeCorr + (FakeVsCalophiEta_p[corrBin]->GetBinContent(FakeVsCalophiEta_p[corrBin]->FindBin(phi, eta)));
     fakeCorr = fakeCorr + (FakeVsCalopt_p[corrBin]->GetBinContent(FakeVsCalopt_p[corrBin]->FindBin(pt)));
     if(isR) fakeCorr = fakeCorr + (FakeVsCalodelR_p[corrBin]->GetBinContent(FakeVsCalodelR_p[corrBin]->FindBin(rmin)));
@@ -304,14 +304,14 @@ Float_t factorizedPtCorr(Int_t corrBin, Int_t hiBin, Float_t pt, Float_t phi, Fl
     std::cout << "factorizedPtCorr: hiBin outside of acceptable range; check input" << std::endl;
     return 1;
   }
-  else if(pt < 0.5)
-    std::cout << "factorizedPtCorr: pt outside of acceptable range; check input" << std::endl;
-  else if(pt >= 300.0)
-    return 0;
+  else if(pt < 0.5) std::cout << "factorizedPtCorr: pt outside of acceptable range; check input" << std::endl;
+  else if(pt >= 300.0) return 1;
 
   Float_t corrFactor = 1;
 
   corrFactor = (1 - getFakeCorr(corrBin, hiBin, pt, phi, eta, rmin, sType))/(getEffCorr(corrBin, hiBin, pt, phi, eta, rmin, sType));
+
+  if(corrFactor > 10) corrFactor = 1;
 
   if(sType == kPPDATA || sType == kPPMC){
     corrFactor = corrFactor*(1 - SecondCaloptEta_p->GetBinContent(SecondCaloptEta_p->FindBin(pt, eta)));
