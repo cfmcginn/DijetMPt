@@ -27,10 +27,10 @@ TH2D* FRAG_CaloCorr_PP_h[nFileFRAGPP];
 void InitFRAGCorrFiles(sampleType sType = kHIDATA)
 {
   if(sType == kHIDATA || sType == kHIMC){
-    //    FRAG_VsCaloFile_p[0] = new TFile("FFJEC_correction_PF_akVs2Calo_pt2.root");
+    FRAG_VsCaloFile_p[0] = new TFile("FFJEC_correction_PF_akVs2Calo_pt2.root");
     FRAG_VsCaloFile_p[1] = new TFile("FFJEC_correction_PF_akVs3Calo_pt2.root");
-    //    FRAG_VsCaloFile_p[2] = new TFile("FFJEC_correction_PF_akVs4Calo_pt2.root");
-    //    FRAG_VsCaloFile_p[3] = new TFile("FFJEC_correction_PF_akVs5Calo_pt2.root");
+    FRAG_VsCaloFile_p[2] = new TFile("FFJEC_correction_PF_akVs4Calo_pt2.root");
+    FRAG_VsCaloFile_p[3] = new TFile("FFJEC_correction_PF_akVs5Calo_pt2.root");
   }
   else if(sType == kPPDATA || sType == kPPMC){
     FRAG_CaloFile_p[0] = new TFile("FFJEC_correction_PF_ak2Calo_pt2.root");
@@ -45,7 +45,7 @@ void InitFRAGCorrFiles(sampleType sType = kHIDATA)
 void InitFRAGCorrHists(sampleType sType = kHIDATA)
 {
   if(sType == kHIDATA || sType == kHIMC){
-    for(Int_t iter = 1; iter < 2; iter++){
+    for(Int_t iter = 0; iter < 4; iter++){
       FRAG_VsCaloCorr_010_h[iter] = (TH2D*)FRAG_VsCaloFile_p[iter]->Get("pNtrk_pt0");
       FRAG_VsCaloCorr_1030_h[iter] = (TH2D*)FRAG_VsCaloFile_p[iter]->Get("pNtrk_pt1");
       FRAG_VsCaloCorr_3050_h[iter] = (TH2D*)FRAG_VsCaloFile_p[iter]->Get("pNtrk_pt2");
@@ -71,7 +71,7 @@ Float_t Get2PFCand(Float_t jtR, Float_t jtPhi, Float_t jtEta, Int_t nPFpart, Flo
     if(pfPt[iter] < pfPtCut) continue;
     if(pfID[iter] != 1) continue;
 
-    if(getDR(jtEta, jtPhi, pfEta[iter], pfPhi[iter]) < jtR) nInJt++;
+    if(getDR(jtEta, jtPhi, pfEta[iter], pfPhi[iter], 4) < jtR) nInJt++;
   }
 
   return nInJt;
@@ -95,7 +95,7 @@ Float_t GetJtFRAGCorrPt(sampleType sType, Int_t jtRBin, Int_t hiBin, Float_t jtP
       else corrPt = FRAG_VsCaloCorr_50100_h[jtRBin]->GetBinContent(FRAG_VsCaloCorr_50100_h[jtRBin]->GetXaxis()->FindBin(nPF), FRAG_VsCaloCorr_50100_h[jtRBin]->GetYaxis()->FindBin(jtPtCheck));
 
     }
-    else if(jtPt < 300 && (sType == kPPDATA || sType == kPPMC)) corrPt = FRAG_CaloCorr_PP_h[jtRBin]->GetBinContent(FRAG_CaloCorr_PP_h[jtRBin]->GetXaxis()->FindBin(nPF), FRAG_CaloCorr_PP_h[jtRBin]->GetYaxis()->FindBin(jtPtCheck));
+    else if(sType == kPPDATA || sType == kPPMC) corrPt = FRAG_CaloCorr_PP_h[jtRBin]->GetBinContent(FRAG_CaloCorr_PP_h[jtRBin]->GetXaxis()->FindBin(nPF), FRAG_CaloCorr_PP_h[jtRBin]->GetYaxis()->FindBin(jtPtCheck));
   }
 
   return 1/corrPt;
