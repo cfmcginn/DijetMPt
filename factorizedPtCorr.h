@@ -209,10 +209,11 @@ void InitPosArrPbPb(Int_t hiBin)
 
 Int_t getPtBin(Float_t pt, sampleType sType = kHIDATA)
 {
-  if(pt < .50 || pt > 1000000){
+  if(pt > 1000000){
     std::cout << "getPtBin: pt outside of acceptable range; check input" << std::endl;
     return -1;
   }
+  else if(pt < 0.50) pt = .500001;
 
   if(sType == kHIDATA || sType == kHIMC){    
     Float_t ptArr[8] = {.50, .55, .65, .80, 1.00, 3.00, 8.00, 1000000};
@@ -304,14 +305,15 @@ Float_t factorizedPtCorr(Int_t corrBin, Int_t hiBin, Float_t pt, Float_t phi, Fl
     std::cout << "factorizedPtCorr: hiBin outside of acceptable range; check input" << std::endl;
     return 1;
   }
-  else if(pt < 0.5) std::cout << "factorizedPtCorr: pt outside of acceptable range; check input" << std::endl;
   else if(pt >= 300.0) return 1;
+
+  if(pt < 0.50) pt = 0.500001;
 
   Float_t corrFactor = 1;
 
   corrFactor = (1 - getFakeCorr(corrBin, hiBin, pt, phi, eta, rmin, sType))/(getEffCorr(corrBin, hiBin, pt, phi, eta, rmin, sType));
 
-  if(corrFactor > 10) corrFactor = 1;
+  //  if(corrFactor > 10) corrFactor = 1;
 
   if(sType == kPPDATA || sType == kPPMC){
     corrFactor = corrFactor*(1 - SecondCaloptEta_p->GetBinContent(SecondCaloptEta_p->FindBin(pt, eta)));
