@@ -8,17 +8,28 @@
 #define cfmDiJetAnaSkim_h
 
 #include "/net/hisrv0001/home/cfmcginn/DijetMPt/CMSSW_5_3_20/src/DijetInitialSkim/cfmDiJetIniSkim.h"
+#include "swapPtCorr.h"
+#include "resTrkPtCorr.h"
+
 #include <string>
 
 TTree* trackTreeAna_p = 0;
 TTree* jetTreeAna_p = 0;
 TTree* genTreeAna_p = 0;
 
-const Int_t nJtAlg = 18;
+const Int_t nJtAlg = 31;
 const Int_t nJtMax = 4;
-const Int_t nSumAlg = 16;
-const Int_t nPtBins = 6;
+const Int_t nSumAlg = 31;
+const Int_t nPtBins = 7;
 const Int_t nRBins = 10;
+
+const Int_t resStartPos = 15;
+const Int_t resEndPos = 20;
+
+const Int_t swapStartPos = 21;
+const Int_t swapEndPos = 26;
+
+const Float_t ptBins[nPtBins] = {0.00, 0.50, 1.00, 2.00, 4.00, 8.00, 10000.00};
 
 //Track Tree Variables
 
@@ -29,6 +40,7 @@ const Int_t nRBins = 10;
 Float_t rAlgJtMult_[2*nSumAlg][2];
 
 Float_t rAlgImbProjA_[2*nSumAlg][nPtBins];
+Float_t rAlgImbProjA13_[2*nSumAlg][nPtBins];
 Float_t rAlgImbProjAC_[2*nSumAlg][nPtBins];
 Float_t rAlgImbProjANC_[2*nSumAlg][nPtBins];
 
@@ -40,6 +52,7 @@ Float_t rAlgImbProjAC3_[2*nSumAlg][nPtBins];
 //DelR ProjA
 
 Float_t rAlgImbProjAR_[2*nSumAlg][nPtBins][nRBins];
+Float_t rAlgImbProjAR13_[2*nSumAlg][nPtBins][nRBins];
 Float_t rAlgImbProjAEta_[2*nSumAlg][nPtBins][nRBins];
 Float_t rAlgImbProjAPhi_[2*nSumAlg][nPtBins][nRBins];
 
@@ -93,29 +106,42 @@ Float_t pthatWeight_;
 Float_t leadEtaWeight_;
 Float_t subleadEtaWeight_;
 
+Float_t swap12Weight_[nJtAlg];
+Float_t swap23Weight_[nJtAlg];
+
 //Jet Set, Array by algorithm, according to enum above, 2nd, 0 = lead, 1 =sublead etc.
 
+Int_t AlgJtN_[nJtAlg];
 Float_t AlgJtPt_[nJtAlg][nJtMax];
 Float_t AlgJtPhi_[nJtAlg][nJtMax];
 Float_t AlgJtEta_[nJtAlg][nJtMax];
 Float_t AlgJtTrkMax_[nJtAlg][nJtMax];
 Float_t AlgJtRawPt_[nJtAlg][nJtMax];
 
-Float_t AlgJtAvePhi_[nJtAlg];
+Float_t AlgJtAvePhi12_[nJtAlg];
+Float_t AlgJtAvePhi13_[nJtAlg];
 Float_t AlgJtDelPhi12_[nJtAlg];
 Float_t AlgJtDelPhi13_[nJtAlg];
 Float_t AlgJtDelPhi23_[nJtAlg];
-Float_t AlgJtAsymm_[nJtAlg];
+
+Float_t AlgJtAsymm12_[nJtAlg];
+Float_t AlgJtAsymm13_[nJtAlg];
+Float_t AlgJtAsymm23_[nJtAlg];
+Float_t AlgJtAsymm123_[nJtAlg];
 
 Float_t AlgRefPt_[nJtAlg][nJtMax];
 Float_t AlgRefPhi_[nJtAlg][nJtMax];
 Float_t AlgRefEta_[nJtAlg][nJtMax];
 
-Float_t AlgRefAvePhi_[nJtAlg];
+Float_t AlgRefAvePhi12_[nJtAlg];
+Float_t AlgRefAvePhi13_[nJtAlg];
 Float_t AlgRefDelPhi12_[nJtAlg];
 Float_t AlgRefDelPhi13_[nJtAlg];
 Float_t AlgRefDelPhi23_[nJtAlg];
-Float_t AlgRefAsymm_[nJtAlg];
+Float_t AlgRefAsymm12_[nJtAlg];
+Float_t AlgRefAsymm13_[nJtAlg];
+Float_t AlgRefAsymm23_[nJtAlg];
+Float_t AlgRefAsymm123_[nJtAlg];
 
 Float_t eventPt_[2];
 
@@ -165,12 +191,12 @@ const Float_t rBounds[nRBins] = {.20, .40, .60, .80, 1.00, 1.20, 1.40, 1.60, 1.8
 //const Float_t leadJtPtCut[nJtAlg] = {120., 120., 120., 117.448, 120., 123.66, 127.89, 120., 120., 120.};
 //const Float_t subLeadJtPtCut[nJtAlg] = {50., 50., 50., 48.9367, 50., 51.5252, 53.2873, 50., 50., 50.};
 
-const Float_t leadJtPtCut[nJtAlg] = {120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120., 120.};
-const Float_t subLeadJtPtCut[nJtAlg] = {50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50., 50.};
+const Float_t leadJtPtCut = 120.;
+const Float_t subLeadJtPtCut = 50.;
 
 const Float_t jtDelPhiCut = 0;
 const Float_t jtEtaCut = 2.0; // Default Max at 2.4 to avoid transition junk, otherwise vary as needed                                                 
-const std::string algType[nJtAlg] = {"Pu3Calo", "Pu4Calo", "Pu5Calo", "Vs2Calo", "Vs3Calo", "Vs4Calo", "Vs5Calo", "Vs2CaloFrag", "Vs3CaloFrag", "Vs4CaloFrag", "Vs5CaloFrag", "Vs3CaloRes", "T2", "T3", "T4", "T5", "PuPF", "VsPF"};
+const std::string algType[nJtAlg] = {"Pu3Calo", "Pu4Calo", "Pu5Calo", "Pu3PF", "Vs2Calo", "Vs3Calo", "Vs4Calo", "Vs5Calo", "Vs3PF", "Pu3CaloFrag", "Vs2CaloFrag", "Vs3CaloFrag", "Vs4CaloFrag", "Vs5CaloFrag", "Vs3PFFrag", "Pu3CaloRes", "Vs2CaloRes", "Vs3CaloRes", "Vs4CaloRes", "Vs5CaloRes", "Vs3PFRes", "Pu3CaloSwap", "Vs2CaloSwap", "Vs3CaloSwap", "Vs4CaloSwap", "Vs5CaloSwap", "Vs3PFSwap", "T2", "T3", "T4", "T5"};
 
 
 void SetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
@@ -187,6 +213,7 @@ void SetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
   trackTreeAna_p->Branch("rAlgJtMult", rAlgJtMult_, Form("rAlgJtMult[%d][2]/F", 2*nSumAlg));
 
   trackTreeAna_p->Branch("rAlgImbProjA", rAlgImbProjA_, Form("rAlgImbProjA[%d][%d]/F", 2*nSumAlg, nPtBins));
+  trackTreeAna_p->Branch("rAlgImbProjA13", rAlgImbProjA13_, Form("rAlgImbProjA13[%d][%d]/F", 2*nSumAlg, nPtBins));
   trackTreeAna_p->Branch("rAlgImbProjAC", rAlgImbProjAC_, Form("rAlgImbProjAC[%d][%d]/F", 2*nSumAlg, nPtBins));
   trackTreeAna_p->Branch("rAlgImbProjANC", rAlgImbProjANC_, Form("rAlgImbProjANC[%d][%d]/F", 2*nSumAlg, nPtBins));
   
@@ -198,6 +225,7 @@ void SetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
   //ProjA DelRs
   
   trackTreeAna_p->Branch("rAlgImbProjAR", rAlgImbProjAR_, Form("rAlgImbProjAR[%d][%d][%d]/F", 2*nSumAlg, nPtBins, nRBins));
+  trackTreeAna_p->Branch("rAlgImbProjAR13", rAlgImbProjAR13_, Form("rAlgImbProjAR13[%d][%d][%d]/F", 2*nSumAlg, nPtBins, nRBins));
   trackTreeAna_p->Branch("rAlgImbProjAEta", rAlgImbProjAEta_, Form("rAlgImbProjAEta[%d][%d][%d]/F", 2*nSumAlg, nPtBins, nRBins));
   trackTreeAna_p->Branch("rAlgImbProjAPhi", rAlgImbProjAPhi_, Form("rAlgImbProjAPhi[%d][%d][%d]/F", 2*nSumAlg, nPtBins, nRBins));
 
@@ -242,17 +270,23 @@ void SetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
     jetTreeAna_p->Branch("centWeight_Merge", centWeight_Merge_, Form("centWeight_Merge[%d]/F", nJtAlg));
   }
 
+  jetTreeAna_p->Branch("AlgJtN", AlgJtN_, Form("AlgJtN[%d]/I", nJtAlg));
   jetTreeAna_p->Branch("AlgJtPt", AlgJtPt_, Form("AlgJtPt[%d][%d]/F", nJtAlg, nJtMax));
   jetTreeAna_p->Branch("AlgJtPhi", AlgJtPhi_, Form("AlgJtPhi[%d][%d]/F", nJtAlg, nJtMax));
   jetTreeAna_p->Branch("AlgJtEta", AlgJtEta_, Form("AlgJtEta[%d][%d]/F", nJtAlg, nJtMax));
   jetTreeAna_p->Branch("AlgJtTrkMax", AlgJtTrkMax_, Form("AlgJtTrkMax[%d][%d]/F", nJtAlg, nJtMax));
   jetTreeAna_p->Branch("AlgJtRawPt", AlgJtRawPt_, Form("AlgJtRawPt[%d][%d]/F", nJtAlg, nJtMax));
 
-  jetTreeAna_p->Branch("AlgJtAvePhi", AlgJtAvePhi_, Form("AlgJtAvePhi[%d]/F", nJtAlg));
+  jetTreeAna_p->Branch("AlgJtAvePhi12", AlgJtAvePhi12_, Form("AlgJtAvePhi12[%d]/F", nJtAlg));
+  jetTreeAna_p->Branch("AlgJtAvePhi13", AlgJtAvePhi13_, Form("AlgJtAvePhi13[%d]/F", nJtAlg));
   jetTreeAna_p->Branch("AlgJtDelPhi12", AlgJtDelPhi12_, Form("AlgJtDelPhi12[%d]/F", nJtAlg));
   jetTreeAna_p->Branch("AlgJtDelPhi13", AlgJtDelPhi13_, Form("AlgJtDelPhi13[%d]/F", nJtAlg));
   jetTreeAna_p->Branch("AlgJtDelPhi23", AlgJtDelPhi23_, Form("AlgJtDelPhi23[%d]/F", nJtAlg));
-  jetTreeAna_p->Branch("AlgJtAsymm", AlgJtAsymm_, Form("AlgJtAsymm[%d]/F", nJtAlg));
+
+  jetTreeAna_p->Branch("AlgJtAsymm12", AlgJtAsymm12_, Form("AlgJtAsymm12[%d]/F", nJtAlg));
+  jetTreeAna_p->Branch("AlgJtAsymm13", AlgJtAsymm13_, Form("AlgJtAsymm13[%d]/F", nJtAlg));
+  jetTreeAna_p->Branch("AlgJtAsymm23", AlgJtAsymm23_, Form("AlgJtAsymm23[%d]/F", nJtAlg));
+  jetTreeAna_p->Branch("AlgJtAsymm123", AlgJtAsymm123_, Form("AlgJtAsymm123[%d]/F", nJtAlg));
 
   if(montecarlo){
     jetTreeAna_p->Branch("isQuarkJet", isQuarkJet_, Form("isQuarkJet[%d]/O", nJtAlg));
@@ -262,6 +296,9 @@ void SetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
   jetTreeAna_p->Branch("pthatWeight", &pthatWeight_, "pthatWeight/F");
   jetTreeAna_p->Branch("leadEtaWeight", &leadEtaWeight_, "leadEtaWeight/F");
   jetTreeAna_p->Branch("subleadEtaWeight", &subleadEtaWeight_, "subleadEtaWeight/F");
+
+  jetTreeAna_p->Branch("swap12Weight", swap12Weight_, "swap12Weight/F");
+  jetTreeAna_p->Branch("swap23Weight", swap23Weight_, "swap23Weight/F");
 
   if(justJt)
     jetTreeAna_p->Branch("eventPt", eventPt_, "eventPt[2]/F");
@@ -274,11 +311,16 @@ void SetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
     jetTreeAna_p->Branch("AlgRefPhi", AlgRefPhi_, Form("AlgRefPhi[%d][%d]/F", nJtAlg, nJtMax));
     jetTreeAna_p->Branch("AlgRefEta", AlgRefEta_, Form("AlgRefEta[%d][%d]/F", nJtAlg, nJtMax));
 
-    jetTreeAna_p->Branch("AlgRefAvePhi", AlgRefAvePhi_, Form("AlgRefAvePhi[%d]/F", nJtAlg));
+    jetTreeAna_p->Branch("AlgRefAvePhi12", AlgRefAvePhi12_, Form("AlgRefAvePhi12[%d]/F", nJtAlg));
+    jetTreeAna_p->Branch("AlgRefAvePhi13", AlgRefAvePhi13_, Form("AlgRefAvePhi13[%d]/F", nJtAlg));
     jetTreeAna_p->Branch("AlgRefDelPhi12", AlgRefDelPhi12_, Form("AlgRefDelPhi12[%d]/F", nJtAlg));
     jetTreeAna_p->Branch("AlgRefDelPhi13", AlgRefDelPhi13_, Form("AlgRefDelPhi13[%d]/F", nJtAlg));
     jetTreeAna_p->Branch("AlgRefDelPhi23", AlgRefDelPhi23_, Form("AlgRefDelPhi23[%d]/F", nJtAlg));
-    jetTreeAna_p->Branch("AlgRefAsymm", AlgRefAsymm_, Form("AlgRefAsymm[%d]/F", nJtAlg));
+
+    jetTreeAna_p->Branch("AlgRefAsymm12", AlgRefAsymm12_, Form("AlgRefAsymm12[%d]/F", nJtAlg));
+    jetTreeAna_p->Branch("AlgRefAsymm13", AlgRefAsymm13_, Form("AlgRefAsymm13[%d]/F", nJtAlg));
+    jetTreeAna_p->Branch("AlgRefAsymm23", AlgRefAsymm23_, Form("AlgRefAsymm23[%d]/F", nJtAlg));
+    jetTreeAna_p->Branch("AlgRefAsymm123", AlgRefAsymm123_, Form("AlgRefAsymm123[%d]/F", nJtAlg));
 
 
     //Gen. proj. onto jetAlg, array ordered according to enum
@@ -333,10 +375,12 @@ void GetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
   
   trackTreeAna_p->SetBranchAddress("rAlgJtMult", rAlgJtMult_);
   trackTreeAna_p->SetBranchAddress("rAlgImbProjA", rAlgImbProjA_);
+  trackTreeAna_p->SetBranchAddress("rAlgImbProjA13", rAlgImbProjA13_);
   trackTreeAna_p->SetBranchAddress("rAlgImbProjAC", rAlgImbProjAC_);
   trackTreeAna_p->SetBranchAddress("rAlgImbProjANC", rAlgImbProjANC_);
 
   trackTreeAna_p->SetBranchAddress("rAlgImbProjAR", rAlgImbProjAR_);    
+  trackTreeAna_p->SetBranchAddress("rAlgImbProjAR13", rAlgImbProjAR13_);    
   trackTreeAna_p->SetBranchAddress("rAlgImbProjAEta", rAlgImbProjAEta_);    
   trackTreeAna_p->SetBranchAddress("rAlgImbProjAPhi", rAlgImbProjAPhi_);    
 
@@ -397,19 +441,28 @@ void GetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
   jetTreeAna_p->SetBranchAddress("pthatWeight", &pthatWeight_);
   jetTreeAna_p->SetBranchAddress("leadEtaWeight", &leadEtaWeight_);
   jetTreeAna_p->SetBranchAddress("subleadEtaWeight", &subleadEtaWeight_);
-  
+
+  jetTreeAna_p->SetBranchAddress("swap12Weight", swap12Weight_);
+  jetTreeAna_p->SetBranchAddress("swap23Weight", swap23Weight_);
+
+  jetTreeAna_p->SetBranchAddress("AlgJtN", AlgJtN_);
   jetTreeAna_p->SetBranchAddress("AlgJtPt", AlgJtPt_);
   jetTreeAna_p->SetBranchAddress("AlgJtPhi", AlgJtPhi_);
   jetTreeAna_p->SetBranchAddress("AlgJtEta", AlgJtEta_);
   jetTreeAna_p->SetBranchAddress("AlgJtTrkMax", AlgJtTrkMax_);
   jetTreeAna_p->SetBranchAddress("AlgJtRawPt", AlgJtRawPt_);
   
-  jetTreeAna_p->SetBranchAddress("AlgJtAvePhi", AlgJtAvePhi_);
+  jetTreeAna_p->SetBranchAddress("AlgJtAvePhi12", AlgJtAvePhi12_);
+  jetTreeAna_p->SetBranchAddress("AlgJtAvePhi13", AlgJtAvePhi13_);
   jetTreeAna_p->SetBranchAddress("AlgJtDelPhi12", AlgJtDelPhi12_);
   jetTreeAna_p->SetBranchAddress("AlgJtDelPhi13", AlgJtDelPhi13_);
   jetTreeAna_p->SetBranchAddress("AlgJtDelPhi23", AlgJtDelPhi23_);
-  jetTreeAna_p->SetBranchAddress("AlgJtAsymm", AlgJtAsymm_);
-  
+
+  jetTreeAna_p->SetBranchAddress("AlgJtAsymm12", AlgJtAsymm12_);
+  jetTreeAna_p->SetBranchAddress("AlgJtAsymm13", AlgJtAsymm13_);
+  jetTreeAna_p->SetBranchAddress("AlgJtAsymm23", AlgJtAsymm23_);
+  jetTreeAna_p->SetBranchAddress("AlgJtAsymm123", AlgJtAsymm123_);  
+
   if(justJt)
     jetTreeAna_p->SetBranchAddress("eventPt", eventPt_);
   
@@ -418,11 +471,15 @@ void GetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
     jetTreeAna_p->SetBranchAddress("AlgRefPhi", AlgRefPhi_);
     jetTreeAna_p->SetBranchAddress("AlgRefEta", AlgRefEta_);
     
-    jetTreeAna_p->SetBranchAddress("AlgRefAvePhi", AlgRefAvePhi_);
+    jetTreeAna_p->SetBranchAddress("AlgRefAvePhi12", AlgRefAvePhi12_);
+    jetTreeAna_p->SetBranchAddress("AlgRefAvePhi13", AlgRefAvePhi13_);
     jetTreeAna_p->SetBranchAddress("AlgRefDelPhi12", AlgRefDelPhi12_);
     jetTreeAna_p->SetBranchAddress("AlgRefDelPhi13", AlgRefDelPhi13_);
     jetTreeAna_p->SetBranchAddress("AlgRefDelPhi23", AlgRefDelPhi23_);
-    jetTreeAna_p->SetBranchAddress("AlgRefAsymm", AlgRefAsymm_);
+    jetTreeAna_p->SetBranchAddress("AlgRefAsymm12", AlgRefAsymm12_);
+    jetTreeAna_p->SetBranchAddress("AlgRefAsymm13", AlgRefAsymm13_);
+    jetTreeAna_p->SetBranchAddress("AlgRefAsymm23", AlgRefAsymm23_);
+    jetTreeAna_p->SetBranchAddress("AlgRefAsymm123", AlgRefAsymm123_);
     
     //Gen Tree Variables
     
@@ -459,6 +516,8 @@ void GetAnaBranches(sampleType sType = kHIDATA, Bool_t justJt = false)
       genTreeAna_p->SetBranchAddress("gAlgImbRawAR", gAlgImbRawAR_);
     }
   }
+
+  return;
 }
 
 
@@ -547,16 +606,12 @@ Float_t getAvePhi(Float_t inLeadPhi, Float_t inSubLeadPhi)
 
 Int_t getPtRange(Float_t cutPt)
 {
-  if(cutPt < 1)
-    return 0;
-  else if(cutPt < 2)
-    return 1;
-  else if(cutPt < 4)
-    return 2;
-  else if(cutPt < 8)
-    return 3;
-  else
-    return 4;
+  for(Int_t iter = 0; iter < nPtBins - 1; iter++){
+    if(cutPt < ptBins[iter+1]) return iter;
+  }
+
+  std::cout << "pt out of range. return -1" << std::endl;
+  return -1;
 }
 
 
@@ -573,6 +628,8 @@ void InitJetVar(sampleType sType = kHIDATA)
       centWeight_Merge_[initIter] = 1;    
     }
 
+    AlgJtN_[initIter] = -999;
+
     for(Int_t initIter2 = 0; initIter2 < nJtMax; initIter2++){
       AlgJtPt_[initIter][initIter2] = -999;
       AlgJtPhi_[initIter][initIter2] = -999;
@@ -581,11 +638,16 @@ void InitJetVar(sampleType sType = kHIDATA)
       AlgJtRawPt_[initIter][initIter2] = -999;
     }
 
-    AlgJtAvePhi_[initIter] = -999;
+    AlgJtAvePhi12_[initIter] = -999;
+    AlgJtAvePhi13_[initIter] = -999;
     AlgJtDelPhi12_[initIter] = -999;
     AlgJtDelPhi13_[initIter] = -999;
     AlgJtDelPhi23_[initIter] = -999;
-    AlgJtAsymm_[initIter] = -999;
+
+    AlgJtAsymm12_[initIter] = -999;
+    AlgJtAsymm13_[initIter] = -999;
+    AlgJtAsymm23_[initIter] = -999;
+    AlgJtAsymm123_[initIter] = -999;
 
     if(montecarlo){
       isQuarkJet_[initIter] = false;
@@ -595,17 +657,25 @@ void InitJetVar(sampleType sType = kHIDATA)
       leadEtaWeight_ = -999;
       subleadEtaWeight_ = -999;
 
+      swap12Weight_[initIter] = -999;
+      swap23Weight_[initIter] = -999;
+
       for(Int_t initIter2 = 0; initIter2 < nJtMax; initIter2++){
 	AlgRefPt_[initIter][initIter2] = -999;
 	AlgRefPhi_[initIter][initIter2] = -999;
 	AlgRefEta_[initIter][initIter2] = -999;
       }
 
-      AlgRefAvePhi_[initIter] = -999;
+      AlgRefAvePhi12_[initIter] = -999;
+      AlgRefAvePhi13_[initIter] = -999;
       AlgRefDelPhi12_[initIter] = -999;
       AlgRefDelPhi13_[initIter] = -999;
       AlgRefDelPhi23_[initIter] = -999;
-      AlgRefAsymm_[initIter] = -999;
+
+      AlgRefAsymm12_[initIter] = -999;
+      AlgRefAsymm13_[initIter] = -999;
+      AlgRefAsymm23_[initIter] = -999;
+      AlgRefAsymm123_[initIter] = -999;
     }
   }
 }
@@ -619,6 +689,7 @@ void InitProjPerp(sampleType sType = kHIDATA)
       if(initIter2 < 2) rAlgJtMult_[initIter][initIter2] = 0;
 
       rAlgImbProjA_[initIter][initIter2] = 0;
+      rAlgImbProjA13_[initIter][initIter2] = 0;
       rAlgImbProjAC_[initIter][initIter2] = 0;
       rAlgImbProjANC_[initIter][initIter2] = 0;
 
@@ -629,6 +700,7 @@ void InitProjPerp(sampleType sType = kHIDATA)
 
       for(Int_t initIter3 = 0; initIter3 < nRBins; initIter3++){
 	rAlgImbProjAR_[initIter][initIter2][initIter3] = 0;
+	rAlgImbProjAR13_[initIter][initIter2][initIter3] = 0;
 	rAlgImbProjAEta_[initIter][initIter2][initIter3] = 0;
 	rAlgImbProjAPhi_[initIter][initIter2][initIter3] = 0;
 
@@ -700,9 +772,19 @@ void InitProjPerp(sampleType sType = kHIDATA)
 }
 
 
-void getJtVar(Int_t nJt, Float_t jtPt[], Float_t jtPhi[], Float_t jtEta[], Float_t trkMax[], Float_t rawPt[], Float_t refPt[], Float_t refPhi[], Float_t refEta[], Int_t algNum, Bool_t montecarlo = false, Bool_t truth = false)
+Float_t getSwapComb(Float_t imbProjAR, Float_t imbProjAR13, Float_t swap12Weight, Float_t swap23Weight, Float_t jtDelPhi13, Float_t jtAsymm12, Float_t jtAsymm23)
 {
-  if(nJt == 0 || nJt == 1 || jtPt[0] < leadJtPtCut[algNum] || jtPt[1] < subLeadJtPtCut[algNum]) return;
+  Float_t combImbProjAR = imbProjAR;
+  if(jtAsymm12 > 0.05 && (swap23Weight == 1 || jtDelPhi13 < 5*TMath::Pi()/6)) combImbProjAR /= (2*swap12Weight - 1);
+  else if(swap23Weight > 0 && jtAsymm23 > 0.05 && jtDelPhi13 > 5*TMath::Pi()/6) combImbProjAR = swap23Weight*combImbProjAR + (1-swap23Weight)*imbProjAR13;
+
+  return combImbProjAR;
+}
+
+void getJtVar(Int_t nJt, Float_t jtPt[], Float_t jtPhi[], Float_t jtEta[], Float_t trkMax[], Float_t rawPt[], Float_t refPt[], Float_t refPhi[], Float_t refEta[], Int_t refPart[], Int_t algNum, Bool_t montecarlo = false, Bool_t truth = false)
+{
+  AlgJtN_[algNum] = nJt;
+  if(nJt == 0 || nJt == 1 || jtPt[0] < leadJtPtCut || jtPt[1] < subLeadJtPtCut) return;
 
   eventSet_[algNum] = true;
 
@@ -726,104 +808,163 @@ void getJtVar(Int_t nJt, Float_t jtPt[], Float_t jtPhi[], Float_t jtEta[], Float
     }
   }
 
-  AlgJtAvePhi_[algNum] = getAvePhi(AlgJtPhi_[algNum][0], AlgJtPhi_[algNum][1]);
+  if(montecarlo){
+    if(TMath::Abs(refPart[0]) < 9) isQuarkJet_[algNum] = true;
+    else if(TMath::Abs(refPart[0]) == 21) isGluonJet_[algNum] = true;
+  }
+
+  AlgJtAvePhi12_[algNum] = getAvePhi(AlgJtPhi_[algNum][0], AlgJtPhi_[algNum][1]);
   AlgJtDelPhi12_[algNum] = getAbsDphi(AlgJtPhi_[algNum][0], AlgJtPhi_[algNum][1], 5);
+  AlgJtAsymm12_[algNum] = (AlgJtPt_[algNum][0] - AlgJtPt_[algNum][1])/(AlgJtPt_[algNum][0] + AlgJtPt_[algNum][1]);
   
   if(AlgJtPt_[algNum][2] > 30 && TMath::Abs(AlgJtEta_[algNum][2]) < 2.0){
     AlgJtDelPhi13_[algNum] = getAbsDphi(AlgJtPhi_[algNum][0], AlgJtPhi_[algNum][2], 6);
+    AlgJtAvePhi13_[algNum] = getAvePhi(AlgJtPhi_[algNum][0], AlgJtPhi_[algNum][2]);
     AlgJtDelPhi23_[algNum] = getAbsDphi(AlgJtPhi_[algNum][1], AlgJtPhi_[algNum][2], 7);
+
+    AlgJtAsymm13_[algNum] = (AlgJtPt_[algNum][0] - AlgJtPt_[algNum][2])/(AlgJtPt_[algNum][0] + AlgJtPt_[algNum][2]);
+    AlgJtAsymm23_[algNum] = (AlgJtPt_[algNum][1] - AlgJtPt_[algNum][2])/(AlgJtPt_[algNum][1] + AlgJtPt_[algNum][2]);
+    Float_t temp23PtX = AlgJtPt_[algNum][1]*cos(AlgJtPhi_[algNum][1]) + AlgJtPt_[algNum][2]*cos(AlgJtPhi_[algNum][2]);
+    Float_t temp23PtY = AlgJtPt_[algNum][1]*sin(AlgJtPhi_[algNum][1]) + AlgJtPt_[algNum][2]*sin(AlgJtPhi_[algNum][2]);
+    Float_t temp23Pt = TMath::Sqrt(temp23PtX*temp23PtX + temp23PtY*temp23PtY);;
+    AlgJtAsymm123_[algNum] = (AlgJtPt_[algNum][0] - temp23Pt)/(AlgJtPt_[algNum][0] + temp23Pt);
   }
-  
-  AlgJtAsymm_[algNum] = (AlgJtPt_[algNum][0] - AlgJtPt_[algNum][1])/(AlgJtPt_[algNum][0] + AlgJtPt_[algNum][1]);
+  else AlgJtAsymm123_[algNum] = AlgJtAsymm12_[algNum];
     
   if(montecarlo && !truth){
     if(AlgRefPhi_[algNum][0] > -9 && AlgRefPhi_[algNum][1] > -9){
-      AlgRefAvePhi_[algNum] = getAvePhi(AlgRefPhi_[algNum][0], AlgRefPhi_[algNum][1]);
-
+      AlgRefAvePhi12_[algNum] = getAvePhi(AlgRefPhi_[algNum][0], AlgRefPhi_[algNum][1]);
       AlgRefDelPhi12_[algNum] = getAbsDphi(AlgRefPhi_[algNum][0], AlgRefPhi_[algNum][1], 8);
-
+      AlgRefAsymm12_[algNum] = (AlgRefPt_[algNum][0] - AlgRefPt_[algNum][1])/(AlgRefPt_[algNum][0] + AlgRefPt_[algNum][1]);
       if(AlgRefPhi_[algNum][2] > -9 && nJt > 2){
 	AlgRefDelPhi13_[algNum] = getAbsDphi(AlgRefPhi_[algNum][0], AlgRefPhi_[algNum][2], 9);
+	AlgRefAvePhi13_[algNum] = getAvePhi(AlgRefPhi_[algNum][0], AlgRefPhi_[algNum][2]);
 	AlgRefDelPhi23_[algNum] = getAbsDphi(AlgRefPhi_[algNum][1], AlgRefPhi_[algNum][2], 10);
-      }
+    
+	AlgRefAsymm13_[algNum] = (AlgRefPt_[algNum][0] - AlgRefPt_[algNum][2])/(AlgRefPt_[algNum][0] + AlgRefPt_[algNum][2]);
+	AlgRefAsymm23_[algNum] = (AlgRefPt_[algNum][1] - AlgRefPt_[algNum][2])/(AlgRefPt_[algNum][1] + AlgRefPt_[algNum][2]);
 
-      AlgRefAsymm_[algNum] = (AlgRefPt_[algNum][0] - AlgRefPt_[algNum][1])/(AlgRefPt_[algNum][0] + AlgRefPt_[algNum][1]);
+
+	Float_t temp23PtX = AlgRefPt_[algNum][1]*cos(AlgRefPhi_[algNum][1]) + AlgRefPt_[algNum][2]*cos(AlgRefPhi_[algNum][2]);
+	Float_t temp23PtY = AlgRefPt_[algNum][1]*sin(AlgRefPhi_[algNum][1]) + AlgRefPt_[algNum][2]*sin(AlgRefPhi_[algNum][2]);
+	Float_t temp23Pt = TMath::Sqrt(temp23PtX*temp23PtX + temp23PtY*temp23PtY);;
+	AlgRefAsymm123_[algNum] = (AlgRefPt_[algNum][0] - temp23Pt)/(AlgRefPt_[algNum][0] + temp23Pt);
+      }
+      else AlgRefAsymm123_[algNum] = AlgRefAsymm12_[algNum];
+
     }
     else{
-      AlgRefAvePhi_[algNum] = -999;
+      AlgRefAvePhi12_[algNum] = -999;
       AlgRefDelPhi12_[algNum] = -999;
       AlgRefDelPhi13_[algNum] = -999;
+      AlgRefAvePhi13_[algNum] = -999;
       AlgRefDelPhi23_[algNum] = -999;
-      AlgRefAsymm_[algNum] = -999;
+      AlgRefAsymm12_[algNum] = -999;
+      AlgRefAsymm13_[algNum] = -999;
+      AlgRefAsymm23_[algNum] = -999;
+      AlgRefAsymm123_[algNum] = -999;
     }
   }
 
   return;
 }
 
-void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt, Float_t phi, Float_t eta)
+void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt, Float_t phi, Float_t eta, Bool_t doCorrPt2, sampleType sType)
 {
-  if(rawPt < 0.5) return;
-
   Int_t multVal;
+
   if(jtAlg == jtAlgCorr) multVal = 1;
   else multVal = corrPt/rawPt;
 
   Int_t signVal = 1;
-  if(cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2)) < 0) signVal = -1;
+  if(cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2)) < 0) signVal = -1;
 
-  if(getAbsDphi(AlgJtAvePhi_[jtAlg], phi, 2) < TMath::Pi()/2) rAlgJtMult_[jtAlgCorr][0] += multVal;
+  if(getAbsDphi(AlgJtAvePhi12_[jtAlg], phi, 2) < TMath::Pi()/2) rAlgJtMult_[jtAlgCorr][0] += multVal;
   else rAlgJtMult_[jtAlgCorr][1] += multVal;
 
   Int_t ptIter = getPtRange(rawPt);
   Float_t tempLeadDelR = getDR(eta, phi, AlgJtEta_[jtAlg][0], AlgJtPhi_[jtAlg][0], 2);
   Float_t tempSubLeadDelR = getDR(eta, phi, AlgJtEta_[jtAlg][1], AlgJtPhi_[jtAlg][1], 2);
+  Float_t tempThirdDelR = 99.0;
+  if(AlgJtPt_[jtAlg][2] > 30) tempThirdDelR = getDR(eta, phi, AlgJtEta_[jtAlg][2], AlgJtPhi_[jtAlg][2]);
   Float_t tempLeadDelEta = TMath::Abs(eta - AlgJtEta_[jtAlg][0]);
   Float_t tempSubLeadDelEta = TMath::Abs(eta - AlgJtEta_[jtAlg][1]);
   Float_t tempLeadDelPhi = TMath::Abs(getDPHI(phi, AlgJtPhi_[jtAlg][0], 2));
   Float_t tempSubLeadDelPhi = TMath::Abs(getDPHI(phi, AlgJtPhi_[jtAlg][1], 2));
 
-  rAlgImbProjA_[jtAlgCorr][5] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-  rAlgImbProjA_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+  Float_t corr2 = 1.0;
+  if(doCorrPt2){
+    Int_t pos = -1;
+    if(jtAlg == 15 || jtAlg == 21) pos = 0;
+    else if(jtAlg == 16 || jtAlg == 22) pos = 1;
+    else if(jtAlg == 17 || jtAlg == 23) pos = 2;
+    else if(jtAlg == 18 || jtAlg == 24) pos = 3;
+    else if(jtAlg == 19 || jtAlg == 25) pos = 4;
+
+    if(sType == kPPMC || sType == kPPDATA) pos-=1;
+
+    corr2 = GetRESTrkPtCorr(pos, tempLeadDelR, tempSubLeadDelR, AlgJtAsymm12_[jtAlg], rawPt, sType);
+  }
+
+  if(ptIter != 0) rAlgImbProjA_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2))*corr2;
+  rAlgImbProjA_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2))*corr2;
+
+  if(AlgJtPt_[jtAlg][2] > 30){
+    if(ptIter != 0) rAlgImbProjA13_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi13_[jtAlg], 2));
+    rAlgImbProjA13_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi13_[jtAlg], 2));
+  }
+
 
   if(tempLeadDelR > 0 && tempSubLeadDelR > 0){
     if(tempLeadDelR < 0.8 || tempSubLeadDelR < 0.8){
-      rAlgImbProjAC_[jtAlgCorr][5] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-      rAlgImbProjAC_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+      if(ptIter != 0) rAlgImbProjAC_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+      rAlgImbProjAC_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
     }
     else{
-      rAlgImbProjANC_[jtAlgCorr][5] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-      rAlgImbProjANC_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+      if(ptIter != 0) rAlgImbProjANC_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+      rAlgImbProjANC_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
     }
 
     if(tempLeadDelR < 0.5 || tempSubLeadDelR < 0.5){
-      rAlgImbProjAC0_[jtAlgCorr][5] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-      rAlgImbProjAC0_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+      if(ptIter != 0) rAlgImbProjAC0_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+      rAlgImbProjAC0_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
     }
     else if(tempLeadDelR < 1.0 || tempSubLeadDelR < 1.0){
-      rAlgImbProjAC1_[jtAlgCorr][5] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-      rAlgImbProjAC1_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+      if(ptIter != 0) rAlgImbProjAC1_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+      rAlgImbProjAC1_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
     }
     else if(tempLeadDelR < 1.5 || tempSubLeadDelR < 1.5){
-      rAlgImbProjAC2_[jtAlgCorr][5] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-      rAlgImbProjAC2_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+      if(ptIter != 0) rAlgImbProjAC2_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+      rAlgImbProjAC2_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
     }
     else{
-      rAlgImbProjAC3_[jtAlgCorr][5] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-      rAlgImbProjAC3_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+      if(ptIter != 0) rAlgImbProjAC3_[jtAlgCorr][nPtBins - 1] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+      rAlgImbProjAC3_[jtAlgCorr][ptIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
     }
 
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	rAlgImbProjAR_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAR_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
 
-	rAlgMultAR_[jtAlgCorr][5][rIter] -= signVal*multVal;	
+	if(ptIter != 0) rAlgImbProjAR_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2))*corr2;	
+	rAlgImbProjAR_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2))*corr2;
+
+	if(ptIter != 0) rAlgMultAR_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;	
 	rAlgMultAR_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
-	rAlgImbRawAR_[jtAlgCorr][5][rIter] += TMath::Abs(corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2)));	
-	rAlgImbRawAR_[jtAlgCorr][ptIter][rIter] += TMath::Abs(corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2)));
+	if(ptIter != 0) rAlgImbRawAR_[jtAlgCorr][nPtBins - 1][rIter] += TMath::Abs(corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2)));	
+	rAlgImbRawAR_[jtAlgCorr][ptIter][rIter] += TMath::Abs(corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2)));
 	break;
+      }
+    }
+
+    if(AlgJtPt_[jtAlg][2] > 30){
+      for(Int_t rIter = 0; rIter < 10; rIter++){
+	if(tempLeadDelR < rBounds[rIter] || tempThirdDelR < rBounds[rIter]){
+	  if(ptIter != 0) rAlgImbProjAR13_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi13_[jtAlg], 2));
+	  rAlgImbProjAR13_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi13_[jtAlg], 2));
+
+	  break;
+	}
       }
     }
 
@@ -832,10 +973,10 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
       if(tempLeadDelPhi > 1.0 && tempSubLeadDelPhi > 1.0) break;
 
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	rAlgImbProjAR_Cut_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAR_Cut_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	if(ptIter != 0) rAlgImbProjAR_Cut_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));	
+	rAlgImbProjAR_Cut_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 
-	rAlgMultAR_Cut_[jtAlgCorr][5][rIter] -= signVal*multVal;	
+	if(ptIter != 0) rAlgMultAR_Cut_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;	
 	rAlgMultAR_Cut_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
 	break;
@@ -846,10 +987,10 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
       if(tempLeadDelEta > 1.0 && tempSubLeadDelEta > 1.0) break;
 
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	rAlgImbProjAR_CutEta_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAR_CutEta_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	if(ptIter != 0) rAlgImbProjAR_CutEta_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));	
+	rAlgImbProjAR_CutEta_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 
-	rAlgMultAR_CutEta_[jtAlgCorr][5][rIter] -= signVal*multVal;	
+	if(ptIter != 0) rAlgMultAR_CutEta_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;	
 	rAlgMultAR_CutEta_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
 	break;
@@ -860,10 +1001,10 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
       if(tempLeadDelPhi > 1.0 && tempSubLeadDelPhi > 1.0) break;
 
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	rAlgImbProjAR_CutPhi_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAR_CutPhi_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	if(ptIter != 0) rAlgImbProjAR_CutPhi_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));	
+	rAlgImbProjAR_CutPhi_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 
-	rAlgMultAR_CutPhi_[jtAlgCorr][5][rIter] -= signVal*multVal;	
+	if(ptIter != 0) rAlgMultAR_CutPhi_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;	
 	rAlgMultAR_CutPhi_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
 	break;
@@ -872,10 +1013,10 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
 
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelPhi < rBounds[rIter] || tempSubLeadDelPhi < rBounds[rIter]){
-	rAlgImbProjAPhi_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAPhi_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	if(ptIter != 0) rAlgImbProjAPhi_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));	
+	rAlgImbProjAPhi_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 
-	rAlgMultAPhi_[jtAlgCorr][5][rIter] -= signVal*multVal;
+	if(ptIter != 0) rAlgMultAPhi_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;
 	rAlgMultAPhi_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
 	break;
@@ -885,10 +1026,10 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelEta > 1.0 && tempSubLeadDelEta > 1.0) break;
       if(tempLeadDelPhi < rBounds[rIter] || tempSubLeadDelPhi < rBounds[rIter]){
-	rAlgImbProjAPhi_Cut_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAPhi_Cut_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	if(ptIter != 0) rAlgImbProjAPhi_Cut_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));	
+	rAlgImbProjAPhi_Cut_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 
-	rAlgMultAPhi_Cut_[jtAlgCorr][5][rIter] -= signVal*multVal;	
+	if(ptIter != 0) rAlgMultAPhi_Cut_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;	
 	rAlgMultAPhi_Cut_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
 	break;
@@ -897,10 +1038,10 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
 
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelEta < rBounds[rIter] || tempSubLeadDelEta < rBounds[rIter]){
-	rAlgImbProjAEta_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAEta_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	if(ptIter != 0) rAlgImbProjAEta_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));	
+	rAlgImbProjAEta_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 
-	rAlgMultAEta_[jtAlgCorr][5][rIter] -= signVal*multVal;	
+	if(ptIter != 0) rAlgMultAEta_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;	
 	rAlgMultAEta_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
 	break;
@@ -910,10 +1051,10 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelPhi > 1.0 && tempSubLeadDelPhi > 1.0) break;
       if(tempLeadDelEta < rBounds[rIter] || tempSubLeadDelEta < rBounds[rIter]){
-	rAlgImbProjAEta_Cut_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));	
-	rAlgImbProjAEta_Cut_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	if(ptIter != 0) rAlgImbProjAEta_Cut_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));	
+	rAlgImbProjAEta_Cut_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 
-	rAlgMultAEta_Cut_[jtAlgCorr][5][rIter] -= signVal*multVal;	
+	if(ptIter != 0) rAlgMultAEta_Cut_[jtAlgCorr][nPtBins - 1][rIter] -= signVal*multVal;	
 	rAlgMultAEta_Cut_[jtAlgCorr][ptIter][rIter] -= signVal*multVal;
 
 	break;
@@ -924,8 +1065,8 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
       if(eta > TMath::Min(AlgJtEta_[jtAlg][0], AlgJtEta_[jtAlg][1]) - 0.3){
 	for(Int_t rIter = 0; rIter < 10; rIter++){
 	  if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	    rAlgImbProjAR_FOR_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-	    rAlgImbProjAR_FOR_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	    if(ptIter != 0) rAlgImbProjAR_FOR_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+	    rAlgImbProjAR_FOR_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 	    break;
 	  }
 	}
@@ -935,8 +1076,8 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
       if(eta < TMath::Max(AlgJtEta_[jtAlg][0], AlgJtEta_[jtAlg][1]) + 0.3){
 	for(Int_t rIter = 0; rIter < 10; rIter++){
 	  if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	    rAlgImbProjAR_FOR_[jtAlgCorr][5][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
-	    rAlgImbProjAR_FOR_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 2));
+	    if(ptIter != 0) rAlgImbProjAR_FOR_[jtAlgCorr][nPtBins - 1][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
+	    rAlgImbProjAR_FOR_[jtAlgCorr][ptIter][rIter] -= corrPt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 2));
 	    break;
 	  }
 	}
@@ -944,7 +1085,6 @@ void GetTrkProjPerp(Int_t jtAlg, Int_t jtAlgCorr, Float_t rawPt, Float_t corrPt,
     }
   
   }
-
 
   return;
 }
@@ -955,8 +1095,8 @@ void GetMixProjPerp(Float_t evPt[2], Int_t nConst, Float_t constPt[], Float_t co
   for(Int_t constIter = 0; constIter < nConst; constIter++){
     evPt[0] -= constPt[constIter]*constCorr[constIter]*cos(constPhi[constIter]);
     evPt[1] -= constPt[constIter]*constCorr[constIter]*sin(constPhi[constIter]);
-    GetTrkProjPerp(1, 1, constPt[constIter], constPt[constIter]*constCorr[constIter], constPhi[constIter], constEta[constIter]);
-    GetTrkProjPerp(1, 4, constPt[constIter], constPt[constIter]*constCorr[constIter], constPhi[constIter], constEta[constIter]);
+    GetTrkProjPerp(1, 1, constPt[constIter], constPt[constIter]*constCorr[constIter], constPhi[constIter], constEta[constIter], true, kHIDATA);
+    GetTrkProjPerp(1, 4, constPt[constIter], constPt[constIter]*constCorr[constIter], constPhi[constIter], constEta[constIter], true, kHIDATA);
   }
 
   return;
@@ -965,13 +1105,12 @@ void GetMixProjPerp(Float_t evPt[2], Int_t nConst, Float_t constPt[], Float_t co
 
 void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
 {
-  if(pt < 0.5) return;
   if(TMath::IsNaN(pt)) return;
 
   Int_t signVal = 1;
-  if(cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3)) < 0) signVal = -1;
+  if(cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3)) < 0) signVal = -1;
 
-  if(getAbsDphi(AlgJtAvePhi_[jtAlg], phi, 3) < TMath::Pi()/2) gAlgJtMult_[jtAlg][0] += 1;
+  if(getAbsDphi(AlgJtAvePhi12_[jtAlg], phi, 3) < TMath::Pi()/2) gAlgJtMult_[jtAlg][0] += 1;
   else gAlgJtMult_[jtAlg][1] += 1;
 
   Int_t ptIter = getPtRange(pt);
@@ -982,29 +1121,29 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
   Float_t tempLeadDelPhi = TMath::Abs(getDPHI(phi, AlgJtPhi_[jtAlg][0], 3));
   Float_t tempSubLeadDelPhi = TMath::Abs(getDPHI(phi, AlgJtPhi_[jtAlg][1], 3));
 
-  gAlgImbProjA_[jtAlg][5] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-  gAlgImbProjA_[jtAlg][ptIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+  if(ptIter != 0) gAlgImbProjA_[jtAlg][nPtBins - 1] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+  gAlgImbProjA_[jtAlg][ptIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
   if(tempLeadDelR > 0 && tempSubLeadDelR > 0){
     if(tempLeadDelR < 0.8 || tempSubLeadDelR < 0.8){
-      gAlgImbProjAC_[jtAlg][5] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-      gAlgImbProjAC_[jtAlg][ptIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+      if(ptIter != 0) gAlgImbProjAC_[jtAlg][nPtBins - 1] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+      gAlgImbProjAC_[jtAlg][ptIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
     }
     else{
-      gAlgImbProjANC_[jtAlg][5] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-      gAlgImbProjANC_[jtAlg][ptIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+      if(ptIter != 0) gAlgImbProjANC_[jtAlg][nPtBins - 1] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+      gAlgImbProjANC_[jtAlg][ptIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
     }
 
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	gAlgImbProjAR_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAR_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAR_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAR_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAR_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAR_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAR_[jtAlg][ptIter][rIter] -= signVal;
 
-	gAlgImbRawAR_[jtAlg][5][rIter] += TMath::Abs(pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3)));
-	gAlgImbRawAR_[jtAlg][ptIter][rIter] += TMath::Abs(pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3)));
+	if(ptIter != 0) gAlgImbRawAR_[jtAlg][nPtBins - 1][rIter] += TMath::Abs(pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3)));
+	gAlgImbRawAR_[jtAlg][ptIter][rIter] += TMath::Abs(pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3)));
 	break;
       }
     }
@@ -1014,10 +1153,10 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
       if(tempLeadDelPhi > 1.0 && tempSubLeadDelPhi > 1.0) break;
 
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	gAlgImbProjAR_Cut_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAR_Cut_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAR_Cut_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAR_Cut_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAR_Cut_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAR_Cut_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAR_Cut_[jtAlg][ptIter][rIter] -= signVal;
 
 	break;
@@ -1028,10 +1167,10 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
       if(tempLeadDelEta > 1.0 && tempSubLeadDelEta > 1.0) break;
 
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	gAlgImbProjAR_CutEta_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAR_CutEta_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAR_CutEta_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAR_CutEta_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAR_CutEta_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAR_CutEta_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAR_CutEta_[jtAlg][ptIter][rIter] -= signVal;
 
 	break;
@@ -1042,10 +1181,10 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
       if(tempLeadDelPhi > 1.0 && tempSubLeadDelPhi > 1.0) break;
 
       if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	gAlgImbProjAR_CutPhi_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAR_CutPhi_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAR_CutPhi_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAR_CutPhi_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAR_CutPhi_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAR_CutPhi_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAR_CutPhi_[jtAlg][ptIter][rIter] -= signVal;
 
 	break;
@@ -1055,10 +1194,10 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
 
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelEta < rBounds[rIter] || tempSubLeadDelEta < rBounds[rIter]){
-	gAlgImbProjAEta_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAEta_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAEta_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAEta_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAEta_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAEta_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAEta_[jtAlg][ptIter][rIter] -= signVal;
 
 	break;
@@ -1070,10 +1209,10 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
       if(tempLeadDelPhi > 1.0 && tempSubLeadDelPhi > 1.0) break;
 
       if(tempLeadDelEta < rBounds[rIter] || tempSubLeadDelEta < rBounds[rIter]){
-	gAlgImbProjAEta_Cut_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAEta_Cut_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAEta_Cut_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAEta_Cut_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAEta_Cut_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAEta_Cut_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAEta_Cut_[jtAlg][ptIter][rIter] -= signVal;
 
 	break;
@@ -1082,10 +1221,10 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
 
     for(Int_t rIter = 0; rIter < 10; rIter++){
       if(tempLeadDelPhi < rBounds[rIter] || tempSubLeadDelPhi < rBounds[rIter]){
-	gAlgImbProjAPhi_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAPhi_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAPhi_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAPhi_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAPhi_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAPhi_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAPhi_[jtAlg][ptIter][rIter] -= signVal;
 
 	break;
@@ -1097,10 +1236,10 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
       if(tempLeadDelEta > 1.0 && tempSubLeadDelEta > 1.0) break;
 
       if(tempLeadDelPhi < rBounds[rIter] || tempSubLeadDelPhi < rBounds[rIter]){
-	gAlgImbProjAPhi_Cut_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	gAlgImbProjAPhi_Cut_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	if(ptIter != 0) gAlgImbProjAPhi_Cut_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	gAlgImbProjAPhi_Cut_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 
-	gAlgMultAPhi_Cut_[jtAlg][5][rIter] -= signVal;
+	if(ptIter != 0) gAlgMultAPhi_Cut_[jtAlg][nPtBins - 1][rIter] -= signVal;
 	gAlgMultAPhi_Cut_[jtAlg][ptIter][rIter] -= signVal;
 
 	break;
@@ -1112,8 +1251,8 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
       if(eta > TMath::Min(AlgJtEta_[jtAlg][0], AlgJtEta_[jtAlg][1]) - 0.3){
 	for(Int_t rIter = 0; rIter < 10; rIter++){
 	  if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	    gAlgImbProjAR_FOR_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	    gAlgImbProjAR_FOR_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	    if(ptIter != 0) gAlgImbProjAR_FOR_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	    gAlgImbProjAR_FOR_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 	    break;
 	  }
 	}
@@ -1123,8 +1262,8 @@ void GetGenProjPerp(Int_t jtAlg, Float_t pt, Float_t phi, Float_t eta)
       if(eta < TMath::Max(AlgJtEta_[jtAlg][0], AlgJtEta_[jtAlg][1]) + 0.3){
 	for(Int_t rIter = 0; rIter < 10; rIter++){
 	  if(tempLeadDelR < rBounds[rIter] || tempSubLeadDelR < rBounds[rIter]){
-	    gAlgImbProjAR_FOR_[jtAlg][5][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
-	    gAlgImbProjAR_FOR_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi_[jtAlg], 3));
+	    if(ptIter != 0) gAlgImbProjAR_FOR_[jtAlg][nPtBins - 1][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
+	    gAlgImbProjAR_FOR_[jtAlg][ptIter][rIter] -= pt*cos(getDPHI(phi, AlgJtAvePhi12_[jtAlg], 3));
 	    break;
 	  }
 	}
