@@ -11,6 +11,7 @@
 #include "etaPhiFunc.h"
 #include <iostream>
 #include "sType.h"
+#include "TMath.h"
 
 //Current # of correction histograms
 
@@ -51,7 +52,7 @@ TH2D* SecondCaloptEta_p;
 TFile* MultrecoCaloFile_p;
 TH2D* MultrecoCaloptEta_p;
 
-void InitFactCorrFiles(sampleType sType = kHIDATA, Bool_t isHITrk = false)
+void InitFactCorrFiles(sampleType sType = kHIDATA)
 {
   //File names w/ various binnings, ordered by pt and then centrality. Each Jet Algorithm gets a file array
 
@@ -213,7 +214,8 @@ Int_t getPtBin(Float_t pt, sampleType sType = kHIDATA)
     std::cout << "getPtBin: pt outside of acceptable range; check input" << std::endl;
     return -1;
   }
-  else if(pt < 0.50) pt = .500001;
+  else if(pt <= 0.50) pt = .500001;
+  else if(pt > .649999 && pt < .650001) pt = 0.650001;
 
   if(sType == kHIDATA || sType == kHIMC){    
     Float_t ptArr[8] = {.50, .55, .65, .80, 1.00, 3.00, 8.00, 1000000};
@@ -238,18 +240,29 @@ Int_t getPtBin(Float_t pt, sampleType sType = kHIDATA)
 }
 
 
-Float_t getTrkRMin(Float_t trkPhi, Float_t trkEta, Int_t nJt, Float_t jtPt[], Float_t jtPhi[], Float_t jtEta[])
+Float_t getTrkRMin(Float_t trkPhi, Float_t trkEta, Int_t nJt, Float_t jtPt[], Float_t jtPhi[], Float_t jtEta[], Bool_t disp = false)
 {
   Float_t trkRMin = 199;
+  Float_t jtFinPt = 0;
+  Float_t jtFinPhi = 0;
+  Float_t jtFinEta = 0;
 
   if(nJt != 0){
     for(Int_t jtEntry = 0; jtEntry < nJt; jtEntry++){
       if(jtPt[jtEntry] < 50.0) continue;
       if(TMath::Abs(jtEta[jtEntry]) > 2.0) continue;
 
-      if(trkRMin > getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry], 0)) trkRMin = getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry], 0);
+      if(trkRMin > getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry], 0)){
+	trkRMin = getDR(trkEta, trkPhi, jtEta[jtEntry], jtPhi[jtEntry], 0);
+	jtFinPt = jtPt[jtEntry];
+	jtFinPhi = jtPhi[jtEntry];
+	jtFinEta = jtEta[jtEntry];
+      }
+
     }
   }
+  if(disp) std::cout << jtFinEta << ",";
+  if(false) std::cout << "      jtPt, Phi, eta: " << jtFinPt << ", " << jtFinPhi << ", " << jtFinEta << std::endl;
 
   return trkRMin;
 }
@@ -271,6 +284,8 @@ Float_t getEffCorr(Int_t corrBin, Int_t hiBin, Float_t pt, Float_t phi, Float_t 
     effCorr = effCorr*(Calopt_p[corrBin]->GetBinContent(Calopt_p[corrBin]->FindBin(pt)));
     if(isR) effCorr = effCorr*(CalodelR_p[corrBin]->GetBinContent(CalodelR_p[corrBin]->FindBin(rmin)));
   }
+
+  if(effCorr == 0) std::cout << "Efficiency corr 0; pt, phi, eta, hiBin, rmin: " << pt << ", " << phi << ", " << eta << ", " << hiBin << ", " << rmin << std::endl;
 
   return effCorr;
 }
@@ -307,11 +322,17 @@ Float_t factorizedPtCorr(Int_t corrBin, Int_t hiBin, Float_t pt, Float_t phi, Fl
   }
   else if(pt >= 300.0) return 1;
 
-  if(pt < 0.50) pt = 0.500001;
+  //  if(pt <= 0.50) pt = 0.500001;
+  if(pt <= 0.50) return 1;
+  else if(pt > .649999 && pt < .650001) pt = 0.650001;
+
+  if(hiBin > 195) hiBin = 195;
 
   Float_t corrFactor = 1;
+  Float_t fake = getFakeCorr(corrBin, hiBin, pt, phi, eta, rmin, sType);
+  Float_t eff = getEffCorr(corrBin, hiBin, pt, phi, eta, rmin, sType);
 
-  corrFactor = (1 - getFakeCorr(corrBin, hiBin, pt, phi, eta, rmin, sType))/(getEffCorr(corrBin, hiBin, pt, phi, eta, rmin, sType));
+  corrFactor = (1 - fake)/(eff);
 
   //  if(corrFactor > 10) corrFactor = 1;
 
@@ -320,9 +341,9 @@ Float_t factorizedPtCorr(Int_t corrBin, Int_t hiBin, Float_t pt, Float_t phi, Fl
     corrFactor = corrFactor/(1 + MultrecoCaloptEta_p->GetBinContent(MultrecoCaloptEta_p->FindBin(pt, eta)));
   }
 
-  if(corrFactor > 1000){
+  if(TMath::Abs(corrFactor) > 1000){
     std::cout << "Problem: " << corrFactor << std::endl;
-    std::cout << "pt, phi, eta: " << pt << ", " << phi << ", " << eta << std::endl;
+    std::cout << "pt, phi, eta, hiBin, rmin: " << pt << ", " << phi << ", " << eta << ", " << hiBin << ", " << rmin << std::endl;
     return 0;
   }
 
